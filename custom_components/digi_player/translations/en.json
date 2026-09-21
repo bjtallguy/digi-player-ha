@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "digi-player amplifier control",
+        "description": "Connect to a digi-player appliance. The token is the contents of /etc/digi-player/api-token on the Pi.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "API token",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach digi-playerd. Check the host, the port, and that the Pi's subnet is in the daemon's IPAddressAllow list.",
+      "invalid_auth": "digi-playerd refused the token."
+    },
+    "abort": {
+      "already_configured": "This digi-player appliance is already configured."
+    }
+  }
+}

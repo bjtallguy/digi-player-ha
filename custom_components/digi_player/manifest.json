@@ -1,0 +1,13 @@
+{
+  "domain": "digi_player",
+  "name": "digi-player amplifier control",
+  "version": "0.1.0",
+  "documentation": "https://github.com/bjtallguy/digi-player-ha",
+  "issue_tracker": "https://github.com/bjtallguy/digi-player-ha/issues",
+  "codeowners": ["@bjtallguy"],
+  "config_flow": true,
+  "dependencies": [],
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": []
+}
