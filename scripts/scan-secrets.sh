@@ -25,7 +25,7 @@ Nabu Casa MCP webhook	/api/webhook/mcp_[0-9a-f]{16,}
 HA MCP OAuth client id	hamcp-[0-9a-f]{16,}
 JSON Web Token	eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}
 Private key block	BEGIN [A-Z ]*PRIVATE KEY
-digi-playerd API token assignment	(api[_-]?token|API[_-]?TOKEN)[[:space:]]*[:=][[:space:]]*['\"]?[A-Za-z0-9_-]{16,}
+Credential assignment	(api[_-]?token|api[_-]?key|secret|passwd|password|token|bearer)[[:space:]]*[:=][[:space:]]*['\"]?[A-Za-z0-9_+/.-]{16,}
 Authorization header with literal	[Aa]uthorization:[[:space:]]*Bearer[[:space:]]+[A-Za-z0-9_.-]{16,}
 Real LAN addressing	192\.168\.10\.[0-9]{1,3}
 PATTERNS
@@ -35,8 +35,19 @@ PATTERNS
 ALLOW='192\.168\.1\.[0-9]{1,3}([^0-9]|$)'
 
 if [ -n "$RANGE" ]; then
-  # Added lines only: what this push would introduce.
-  CONTENT="$(git diff --unified=0 "$RANGE" -- . 2>/dev/null \
+  # A range (A..B) is an update to an existing remote branch: scan what this
+  # push adds on top of what the remote already has.
+  #
+  # A bare commit is a BRANCH THAT IS NEW ON THE REMOTE. There is no "since"
+  # point, so diff it against the empty tree and scan the whole content of that
+  # commit. Do not diff a bare commit directly -- git compares it against the
+  # working tree, which at push time is usually identical, so the scan silently
+  # passes on the one push where nothing has been reviewed yet.
+  case "$RANGE" in
+    *..*) DIFF_ARGS=("$RANGE") ;;
+    *)    DIFF_ARGS=("$(git hash-object -t tree /dev/null)" "$RANGE") ;;
+  esac
+  CONTENT="$(git diff --unified=0 "${DIFF_ARGS[@]}" -- . 2>/dev/null \
              | grep -E '^\+' | grep -Ev '^\+\+\+')"
   SCOPE="added lines in $RANGE"
 else
@@ -55,7 +66,7 @@ fi
 FOUND=0
 while IFS=$'\t' read -r NAME REGEX; do
   [ -z "${NAME:-}" ] && continue
-  HITS="$(printf '%s\n' "$CONTENT" | grep -E "$REGEX" | grep -Ev "$ALLOW" | wc -l | tr -d ' ')"
+  HITS="$(printf '%s\n' "$CONTENT" | grep -iE "$REGEX" | grep -ivE "$ALLOW" | wc -l | tr -d ' ')"
   if [ "$HITS" != "0" ]; then
     echo "  BLOCKED  $NAME -- $HITS line(s)"
     FOUND=$((FOUND + HITS))
